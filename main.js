@@ -3,6 +3,9 @@ import pinch from './pinch.js'
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
 
+canvas.width = parseInt(getComputedStyle(canvas).width) * 2
+canvas.height = parseInt(getComputedStyle(canvas).height) * 2
+
 const print = () => {
   ctx.beginPath()
   ctx.rect(400, 300, 550, 400)
@@ -10,19 +13,14 @@ const print = () => {
   ctx.fill()
 }
 
-const pincher = pinch(canvas, {
-  onresize: print,
-})
+pinch(canvas, print)
 
-pincher.update()
 print()
 
 document.querySelector('.button-1')?.addEventListener('click', () => {
-  pincher.update()
   print()
 })
 
 document.querySelector('.button-2')?.addEventListener('click', () => {
-  pincher.restore()
   print()
 })

@@ -1,11 +1,32 @@
-export default (element, onupdate) => {
-  element.addEventListener('pointerdown', e => {
+export default (element, onupdate = () => {}) => {
+  let drag = false
+  let last = null
+
+  const handlePointerdown = e => {
     console.log(e)
-  })
+    drag = true
+    last = { x: e.offsetX, y: e.offsetY }
+  }
 
-  element.addEventListener('pointermove', ({ offsetX, offsetY }) => {
-    console.log('move', { offsetX, offsetY })
+  const handlePointermove = ({ offsetX, offsetY }) => {
+    if (!drag) return
 
-    onupdate({ offsetX, offsetY })
-  })
+    const newPos = { x: offsetX, y: offsetY }
+
+    onupdate(canvas, {
+      x: (newPos.x - last.x) * window.devicePixelRatio,
+      y: (newPos.y - last.y) * window.devicePixelRatio,
+    })
+
+    last = newPos
+  }
+
+  const handlePointerup = e => {
+    drag = false
+  }
+
+  element.addEventListener('pointerdown', handlePointerdown)
+  element.addEventListener('pointermove', handlePointermove)
+  element.addEventListener('pointerup', handlePointerup)
+  element.addEventListener('pointerleave', handlePointerup)
 }
