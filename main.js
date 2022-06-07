@@ -16,17 +16,18 @@ image.onload = () => {
   }
 
   events(canvas, {
+    options: {
+      dpi: 1,
+    },
     onMove: move,
-    onZoom: zoom,
+    onPinch: zoom,
     onUpdate: print,
   })
-
-  // pinch(canvas, print)
 
   print()
 
   document.querySelector('.button-1')?.addEventListener('click', () => {
-    zoom(canvas, { zoom: 1.3 })
+    zoom(canvas, { zoom: 0.3 })
     print()
   })
 

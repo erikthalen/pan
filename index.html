@@ -11,10 +11,16 @@
         overflow: hidden;
       }
 
+      * {
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
       canvas {
         border: 1px solid;
-        width: 800px;
-        height: 600px;
+        width: 320px;
+        height: 500px;
 
         max-width: 100%;
       }
