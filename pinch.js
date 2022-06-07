@@ -1,36 +1,27 @@
-import events from './events.js'
+const _base =
+  doWhatYouGottaDo =>
+  (canvas, ...args) => {
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.transform(1, 0, 0, 1, canvas.width / 2, canvas.height / 2)
 
-const updater = (canvas, pos) => {
-  const ctx = canvas.getContext('2d')
+    doWhatYouGottaDo(ctx, ...args)
+    // ctx.rotate((5 * Math.PI) / 180)
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-  // save
-  ctx.transform(1, 0, 0, 1, canvas.width / 2, canvas.height / 2)
-
-  // ctx.transform(1, 0, 0, 1, 1, 1)
-  ctx.transform(1, 0, 0, 1, pos.x, pos.y)
-  // ctx.rotate((5 * Math.PI) / 180)
-
-  // restore
-  ctx.transform(1, 0, 0, 1, -canvas.width / 2, -canvas.height / 2)
-
-  return 'updater!'
-}
-
-export default (canvas, print) => {
-  canvas.style.touchAction = 'none'
-
-  events(canvas, (...args) => {
-    updater(...args)
-    print()
-  })
-
-  return {
-    restore: () => {
-      const ctx = canvas.getContext('2d')
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      ctx.setTransform(1, 0, 0, 1, 0, 0)
-    },
+    ctx.transform(1, 0, 0, 1, -canvas.width / 2, -canvas.height / 2)
   }
+
+export const move = _base((ctx, { x, y }) => {
+  const { a, d } = ctx.getTransform()
+  ctx.translate(x / a, y / d)
+})
+
+export const zoom = _base((ctx, { zoom }) => {
+  ctx.scale(zoom, zoom)
+})
+
+export const restore = canvas => {
+  const ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
 }

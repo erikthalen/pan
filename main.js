@@ -1,4 +1,5 @@
-import pinch from './pinch.js'
+import { move, restore, zoom } from './pinch.js'
+import events from './events.js'
 
 const canvas = document.getElementById('canvas')
 const ctx = canvas.getContext('2d')
@@ -6,21 +7,31 @@ const ctx = canvas.getContext('2d')
 canvas.width = parseInt(getComputedStyle(canvas).width) * 2
 canvas.height = parseInt(getComputedStyle(canvas).height) * 2
 
-const print = () => {
-  ctx.beginPath()
-  ctx.rect(400, 300, 550, 400)
-  ctx.fillStyle = 'dodgerblue'
-  ctx.fill()
+const image = new Image()
+image.src = './eye.jpg'
+
+image.onload = () => {
+  const print = () => {
+    ctx.drawImage(image, 300, 200)
+  }
+
+  events(canvas, {
+    onMove: move,
+    onZoom: zoom,
+    onUpdate: print,
+  })
+
+  // pinch(canvas, print)
+
+  print()
+
+  document.querySelector('.button-1')?.addEventListener('click', () => {
+    zoom(canvas, { zoom: 1.3 })
+    print()
+  })
+
+  document.querySelector('.button-2')?.addEventListener('click', () => {
+    restore(canvas)
+    print()
+  })
 }
-
-pinch(canvas, print)
-
-print()
-
-document.querySelector('.button-1')?.addEventListener('click', () => {
-  print()
-})
-
-document.querySelector('.button-2')?.addEventListener('click', () => {
-  print()
-})
