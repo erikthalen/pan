@@ -10,9 +10,17 @@ canvas.height = parseInt(getComputedStyle(canvas).height) * 2
 const image = new Image()
 image.src = './eye.jpg'
 
+const lines = [...Array(51).keys()]
+
 image.onload = () => {
   const print = () => {
-    ctx.drawImage(image, 300, 200)
+    ctx.drawImage(image, 350, 200)
+
+    lines.forEach(y => {
+      ctx.beginPath()
+      ctx.rect(300, y * 20 - 2, 40, 2)
+      ctx.fill()
+    })
   }
 
   events(canvas, {
@@ -27,8 +35,17 @@ image.onload = () => {
   print()
 
   document.querySelector('.button-1')?.addEventListener('click', () => {
-    zoom(canvas, { zoom: 0.3 })
+    const z = zoom(canvas, { zoom: 0.3 })
     print()
+
+    console.log(z)
+  })
+
+  document.querySelector('.button-3')?.addEventListener('click', () => {
+    const z = zoom(canvas, { zoom: -0.3 })
+    print()
+
+    console.log(z)
   })
 
   document.querySelector('.button-2')?.addEventListener('click', () => {
