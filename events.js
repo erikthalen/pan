@@ -1,21 +1,33 @@
+function isTouchDevice() {
+  return (
+    'ontouchstart' in window ||
+    navigator.maxTouchPoints > 0 ||
+    navigator.msMaxTouchPoints > 0
+  )
+}
+
 export default (
   canvas,
   {
     options = {
       dpi: window.devicePixelRatio,
+      bounding: null,
     },
     onUpdate = () => {},
-    onMove = () => {},
-    onPinch = () => {},
+    onTwoFingerMove = () => {},
+    onTwoFingerPinch = () => {},
   }
 ) => {
   canvas.style.touchAction = 'none'
-  // canvas.style.userSelect = 'none'
+  canvas.style.userSelect = 'none'
+  canvas.style.webkitUserSelect = 'none'
 
   let fingers = []
   let lastDistance = null
 
   const handlePointerdown = e => {
+    e.preventDefault()
+
     fingers.push({
       id: e.pointerId,
       x: e.offsetX,
@@ -25,11 +37,12 @@ export default (
     })
 
     console.log('PointerDown', e)
-
-    onUpdate()
+    canvas.addEventListener('pointerleave', handlePointerup, { once: true })
   }
 
   const handlePointermove = e => {
+    e.preventDefault()
+
     const currentFinger = fingers.find(({ id }) => id === e.pointerId)
 
     if (!currentFinger) return
@@ -43,7 +56,7 @@ export default (
     }
 
     if (fingers.length === 2) {
-      onMove(canvas, {
+      onTwoFingerMove(canvas, {
         x: newFinger.deltaX * options.dpi,
         y: newFinger.deltaY * options.dpi,
       })
@@ -54,7 +67,7 @@ export default (
       )
 
       if (lastDistance) {
-        onPinch(canvas, { zoom: distance - lastDistance, scale: 100 })
+        onTwoFingerPinch(canvas, { zoom: distance - lastDistance, scale: 100 })
       }
 
       lastDistance = distance
@@ -68,16 +81,36 @@ export default (
   }
 
   const handlePointerup = e => {
+    e.preventDefault()
+
     fingers = fingers.filter(({ id }) => id !== e.pointerId)
     lastDistance = null
+    console.log('PointerUp', e)
   }
 
-  canvas.addEventListener('pointerdown', handlePointerdown)
-  canvas.addEventListener('pointermove', handlePointermove)
-  // canvas.addEventListener('pointerup', handlePointerup)
-  canvas.addEventListener('pointerleave', handlePointerup)
-  canvas.addEventListener('pointercancel', e => {
-    console.log('CANCEL')
-    handlePointerup(e)
-  })
+  if (isTouchDevice()) {
+    canvas.addEventListener('pointerdown', handlePointerdown)
+    canvas.addEventListener('pointermove', handlePointermove)
+    canvas.addEventListener('pointerup', handlePointerup)
+    canvas.addEventListener('pointercancel', e => {
+      console.log('CANCEL')
+      handlePointerup(e)
+    })
+  } else {
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault()
+
+      if (e.ctrlKey) {
+        onTwoFingerPinch(canvas, { zoom: -e.deltaY * 0.03 })
+      } else {
+        onTwoFingerMove(canvas, {
+          x: -e.deltaX * 2,
+          y: -e.deltaY * 2,
+          bounding: options.bounding,
+        })
+      }
+
+      onUpdate()
+    })
+  }
 }

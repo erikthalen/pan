@@ -1,3 +1,5 @@
+import { clamp } from './dump.js'
+
 const clear = ctx => {
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
@@ -21,10 +23,25 @@ const _base =
     return res
   }
 
-export const move = _base((ctx, { x, y }) => {
-  const { a, d } = ctx.getTransform()
-  const n = { x: x / a, y: y / d }
-  ctx.translate(n.x, n.y)
+export const move = _base((ctx, { x, y, bounding }) => {
+  const { a, d, e, f } = ctx.getTransform()
+  const n = {
+    x: x / a,
+    y: y / d,
+  }
+
+  console.log(e, f)
+
+  if (bounding) {
+    if (e + n.x < bounding.x && e + n.x > -bounding.x) {
+      ctx.translate(n.x, 0)
+    }
+    if (f + n.y < bounding.y && f + n.y > -bounding.y) {
+      ctx.translate(0, n.y)
+    }
+  } else {
+    ctx.translate(n.x, n.y)
+  }
 
   return n
 })
@@ -36,9 +53,9 @@ export const zoom = _base((ctx, { zoom, scale = 1, max = 200, min = 0.1 }) => {
 
   const { a, b, c, d, e, f } = ctx.getTransform()
 
-  const n = a + (zoom / scale) * (a / 2)
+  const n = ax + (zoom / scale) * (ax / 2)
 
-  ax = Math.max(min, Math.min(max, Math.round(n * 100) / 100))
+  ax = clamp(Math.round(n * 100) / 100, min, max)
 
   ctx.setTransform(1, b, c, 1, e, f)
   ctx.scale(ax, ax)
