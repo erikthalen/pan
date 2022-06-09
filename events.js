@@ -97,11 +97,17 @@ export default (
       handlePointerup(e)
     })
   } else {
+    let focal = { x: canvas.width / 2, y: canvas.height / 2 }
+
+    canvas.addEventListener('mousemove', e => {
+      focal = { x: e.offsetX, y: e.offsetY }
+    })
     canvas.addEventListener('wheel', e => {
+      console.log(focal)
       e.preventDefault()
 
       if (e.ctrlKey) {
-        onTwoFingerPinch(canvas, { zoom: -e.deltaY * 0.03 })
+        onTwoFingerPinch(canvas, { focal, zoom: -e.deltaY * 0.03 })
       } else {
         onTwoFingerMove(canvas, {
           x: -e.deltaX * 2,

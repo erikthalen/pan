@@ -13,12 +13,19 @@ const _base =
     const ctx = canvas.getContext('2d')
     clear(ctx)
 
+    const { a } = ctx.getTransform()
+
+    const focal = (args.length && args[0]?.focal) || {
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+    }
+
     // begin
-    ctx.transform(1, 0, 0, 1, canvas.width / 2, canvas.height / 2)
+    ctx.transform(1, 0, 0, 1, focal.x * a, focal.y * a)
 
     const res = doWhatYouGottaDo(ctx, ...args)
 
-    ctx.transform(1, 0, 0, 1, -canvas.width / 2, -canvas.height / 2)
+    ctx.transform(1, 0, 0, 1, -focal.x * a, -focal.y * a)
 
     return res
   }
@@ -32,16 +39,18 @@ export const move = _base((ctx, { x, y, bounding }) => {
 
   console.log(e, f)
 
-  if (bounding) {
-    if (e + n.x < bounding.x && e + n.x > -bounding.x) {
-      ctx.translate(n.x, 0)
-    }
-    if (f + n.y < bounding.y && f + n.y > -bounding.y) {
-      ctx.translate(0, n.y)
-    }
-  } else {
-    ctx.translate(n.x, n.y)
-  }
+  // if (bounding) {
+  //   if (e + n.x < bounding.x && e + n.x > -bounding.x) {
+  //     ctx.translate(n.x, 0)
+  //   }
+  //   if (f + n.y < bounding.y && f + n.y > -bounding.y) {
+  //     ctx.translate(0, n.y)
+  //   }
+  // } else {
+  //   ctx.translate(n.x, n.y)
+  // }
+
+  ctx.translate(n.x, n.y)
 
   return n
 })

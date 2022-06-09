@@ -1,47 +1,76 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
-    />
-    <title>pan</title>
-    <script type="module" src="/main.js"></script>
 
-    <style>
-      /* * {
-        touch-action: none;
-        user-select: none;
-        -webkit-user-select: none;
-      } */
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Zooming via HTML5 Canvas Context</title>
+  <style type="text/css" media="screen">
+    body {
+      text-align: center;
+    }
 
-      img {
-        display: none;
+    canvas {
+      display: block;
+      margin: 1em auto;
+      background: #fff;
+      border: 1px solid #ccc
+    }
+  </style>
+</head>
+
+<body>
+  <canvas></canvas>
+
+  <script type="text/javascript" charset="utf-8">
+    var canvas = document.getElementsByTagName('canvas')[0];
+    canvas.width = 800; canvas.height = 600;
+    var gkhead = new Image;
+    var ball = new Image;
+    window.onload = function () {
+      var ctx = canvas.getContext('2d');
+
+      function redraw() {
+        // Alternatively:
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+
+        ctx.drawImage(gkhead, 200, 50);
+      }
+      redraw();
+
+
+      const origin = { x: 0, y: 0 }
+      const mouse = { x: 0, y: 0 }
+      var scale = 1;
+
+      canvas.addEventListener('mousemove', function (e) {
+        mouse.x = e.offsetX
+        mouse.y = e.offsetY
+      }, false);
+
+
+
+      function scaleAt(x, y, scaleBy) {  // at pixel coords x, y scale by scaleBy
+        scale += scaleBy;
+        origin.x = x - (x - origin.x) * scale;
+        origin.y = y - (y - origin.y) * scale;
       }
 
-      canvas {
-        border: 1px solid;
-        width: 320px;
-        height: 500px;
+      var handleScroll = function (e) {
+        scaleAt(mouse.x, mouse.y, -e.deltaY / 400)
+        console.log(scale, origin, mouse)
+        ctx.setTransform(scale, 0, 0, scale, origin.x, origin.y);
+        redraw()
+      };
+      canvas.addEventListener('DOMMouseScroll', handleScroll, false);
+      canvas.addEventListener('mousewheel', handleScroll, false);
+    };
+    gkhead.src = './eye.jpg';
 
-        max-width: 100%;
-      }
 
-      @media (min-width: 600px) {
-        canvas {
-          width: 620px;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <canvas id="canvas"></canvas>
-    <button class="button-1">Zoom in</button>
-    <button class="button-3">Zoom out</button>
-    <button class="button-2">Restore</button>
+  </script>
+</body>
 
-    <img id="apple" src="./apple.png" alt="apple" />
-    <img id="eye" src="./eye.jpg" alt="eye" />
-  </body>
 </html>
