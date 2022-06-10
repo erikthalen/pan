@@ -7,13 +7,11 @@
   <style type="text/css" media="screen">
     body {
       text-align: center;
+      margin: 0;
     }
 
     canvas {
       display: block;
-      margin: 1em auto;
-      background: #fff;
-      border: 1px solid #ccc
     }
   </style>
 </head>
@@ -23,9 +21,9 @@
 
   <script type="text/javascript" charset="utf-8">
     var canvas = document.getElementsByTagName('canvas')[0];
-    canvas.width = 800; canvas.height = 600;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     var gkhead = new Image;
-    var ball = new Image;
     window.onload = function () {
       var ctx = canvas.getContext('2d');
 
@@ -40,32 +38,55 @@
       }
       redraw();
 
+      const View = (ctx) => {
+        const m = [1, 0, 0, 1, 0, 0]; // current view transform
+        var scale = 1;              // current scale                   // reference to the 2D context
+        const pos = { x: 0, y: 0 }; // current position of origin
+        var dirty = true;
+        const API = {
+          apply() {
+            ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5])
+          },
 
-      const origin = { x: 0, y: 0 }
-      const mouse = { x: 0, y: 0 }
-      var scale = 1;
+          pan(amount) {
+            pos.x += amount.x;
+            pos.y += amount.y;
+            view.update()
+          },
 
-      canvas.addEventListener('mousemove', function (e) {
-        mouse.x = e.offsetX
-        mouse.y = e.offsetY
-      }, false);
+          update() {
 
+            m[3] = m[0] = scale;
+            m[2] = m[1] = 0;
+            m[4] = pos.x;
+            m[5] = pos.y;
+          },
+          scaleAt(at, amount) {
+            scale *= amount;
+            pos.x = at.x - (at.x - pos.x) * amount;
+            pos.y = at.y - (at.y - pos.y) * amount;
 
+            this.update()
+          },
+        };
+        return API;
+      };
 
-      function scaleAt(x, y, scaleBy) {  // at pixel coords x, y scale by scaleBy
-        scale += scaleBy;
-        origin.x = x - (x - origin.x) * scale;
-        origin.y = y - (y - origin.y) * scale;
-      }
+      const view = View(ctx)
 
       var handleScroll = function (e) {
-        scaleAt(mouse.x, mouse.y, -e.deltaY / 400)
-        console.log(scale, origin, mouse)
-        ctx.setTransform(scale, 0, 0, scale, origin.x, origin.y);
+        e.preventDefault()
+
+        if (!e.ctrlKey) {
+          view.pan({ x: -e.deltaX, y: -e.deltaY })
+        } else {
+          view.scaleAt({ x: e.offsetX, y: e.offsetY }, 1 - e.deltaY / 100)
+        }
+
         redraw()
-      };
-      canvas.addEventListener('DOMMouseScroll', handleScroll, false);
-      canvas.addEventListener('mousewheel', handleScroll, false);
+        view.apply()
+      }
+      canvas.addEventListener('wheel', handleScroll, false);
     };
     gkhead.src = './eye.jpg';
 
