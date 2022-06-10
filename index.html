@@ -20,77 +20,61 @@
   <canvas></canvas>
 
   <script type="text/javascript" charset="utf-8">
-    var canvas = document.getElementsByTagName('canvas')[0];
+    var canvas = document.querySelector('canvas')
+
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
     var gkhead = new Image;
+
     window.onload = function () {
       var ctx = canvas.getContext('2d');
 
-      function redraw() {
-        // Alternatively:
+      function print() {
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
 
-        ctx.drawImage(gkhead, 200, 50);
+        ctx.scale(0.1, 0.1)
+        ctx.drawImage(gkhead, 11000, 3000);
+
       }
-      redraw();
+      print();
 
-      const View = (ctx) => {
-        const m = [1, 0, 0, 1, 0, 0]; // current view transform
-        var scale = 1;              // current scale                   // reference to the 2D context
-        const pos = { x: 0, y: 0 }; // current position of origin
-        var dirty = true;
-        const API = {
-          apply() {
-            ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5])
-          },
+      var scale = 1;
+      const pos = { x: 0, y: 0 }
 
-          pan(amount) {
-            pos.x += amount.x;
-            pos.y += amount.y;
-            view.update()
-          },
-
-          update() {
-
-            m[3] = m[0] = scale;
-            m[2] = m[1] = 0;
-            m[4] = pos.x;
-            m[5] = pos.y;
-          },
-          scaleAt(at, amount) {
-            scale *= amount;
-            pos.x = at.x - (at.x - pos.x) * amount;
-            pos.y = at.y - (at.y - pos.y) * amount;
-
-            this.update()
-          },
-        };
-        return API;
-      };
-
-      const view = View(ctx)
+      const pan = (amount) => {
+        pos.x += amount.x;
+        pos.y += amount.y;
+        
+        ctx.setTransform(scale, 0, 0, scale, pos.x, pos.y)
+      }
+      
+      const scaleAt = (at, amount) => {
+        scale *= amount;
+        pos.x = at.x - (at.x - pos.x) * amount;
+        pos.y = at.y - (at.y - pos.y) * amount;
+        
+        ctx.setTransform(scale, 0, 0, scale, pos.x, pos.y)
+      }
 
       var handleScroll = function (e) {
         e.preventDefault()
 
         if (!e.ctrlKey) {
-          view.pan({ x: -e.deltaX, y: -e.deltaY })
+          pan({ x: -e.deltaX, y: -e.deltaY })
         } else {
-          view.scaleAt({ x: e.offsetX, y: e.offsetY }, 1 - e.deltaY / 100)
+          scaleAt({ x: e.offsetX, y: e.offsetY }, 1 - e.deltaY / 100)
         }
 
-        redraw()
-        view.apply()
+        print()
       }
       canvas.addEventListener('wheel', handleScroll, false);
     };
-    gkhead.src = './eye.jpg';
 
-
+    gkhead.src = './eye-2.jpg';
   </script>
 </body>
 
