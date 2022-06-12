@@ -1,3 +1,5 @@
+import { move, zoom } from './pinch.js'
+
 function isTouchDevice() {
   return (
     'ontouchstart' in window ||
@@ -8,17 +10,8 @@ function isTouchDevice() {
 
 export default (
   canvas,
-  {
-    dpi = window.devicePixelRatio,
-    bounding = null,
-
-    onUpdate = () => {},
-    onTwoFingerMove = () => {},
-    onTwoFingerPinch = () => {},
-  }
+  { dpi = window.devicePixelRatio, bounding = null } = {}
 ) => {
-  const ctx = canvas.getContext('2d')
-
   canvas.style.touchAction = 'none'
   canvas.style.userSelect = 'none'
   canvas.style.webkitUserSelect = 'none'
@@ -26,18 +19,27 @@ export default (
   let fingers = {}
   let lastDistance = null
 
+  const dispatch = detail => {
+    canvas.dispatchEvent(
+      new CustomEvent('pan', {
+        detail,
+        bubbles: true,
+        cancelable: true,
+        composed: false,
+      })
+    )
+  }
+
   const handlePointerdown = e => {
     e.preventDefault()
 
     fingers[e.pointerId] = {
-      id: e.pointerId,
       x: e.offsetX,
       y: e.offsetY,
       deltaX: 0,
       deltaY: 0,
     }
 
-    console.log('PointerDown', e)
     canvas.addEventListener('pointerleave', handlePointerup, { once: true })
   }
 
@@ -48,16 +50,11 @@ export default (
     if (Object.keys(fingers).length !== 2) return
 
     fingers[e.pointerId] = {
-      id: e.pointerId,
       x: e.offsetX,
       y: e.offsetY,
       deltaX: e.offsetX - fingers[e.pointerId].x,
       deltaY: e.offsetY - fingers[e.pointerId].y,
     }
-    const { pos } = onTwoFingerMove(canvas, {
-      x: fingers[e.pointerId].deltaX * dpi,
-      y: fingers[e.pointerId].deltaY * dpi,
-    })
 
     const fingersArray = Object.values(fingers)
 
@@ -66,21 +63,23 @@ export default (
         Math.pow(fingersArray[1].y - fingersArray[0].y, 2)
     )
 
-    const { scale } = onTwoFingerPinch(canvas, {
+    const { position } = move({
+      x: fingers[e.pointerId].deltaX * dpi * 0.7,
+      y: fingers[e.pointerId].deltaY * dpi * 0.7,
+    })
+
+    const { scale } = zoom({
       focal: { x: e.offsetX * dpi, y: e.offsetY * dpi },
       zoom: !lastDistance ? 1 : 1 + (distance - lastDistance) / 200,
     })
 
-    ctx.setTransform(scale, 0, 0, scale, pos.x, pos.y)
-
     lastDistance = distance
 
-    onUpdate()
+    dispatch({ scale, position })
   }
 
   const handlePointerup = e => {
     e.preventDefault()
-
     delete fingers[e.pointerId]
     lastDistance = null
   }
@@ -91,33 +90,19 @@ export default (
     canvas.addEventListener('pointerup', handlePointerup)
     canvas.addEventListener('pointercancel', handlePointerup)
   } else {
-    const ctx = canvas.getContext('2d')
-
     canvas.addEventListener('wheel', e => {
       e.preventDefault()
 
       if (e.ctrlKey) {
-        const { scale, pos } = onTwoFingerPinch(canvas, {
-          focal: { x: e.offsetX * dpi, y: e.offsetY * dpi },
-          zoom: 1 - e.deltaY / 100,
-        })
-
-        ctx.setTransform(scale, 0, 0, scale, pos.x, pos.y)
+        dispatch(
+          zoom({
+            focal: { x: e.offsetX * dpi, y: e.offsetY * dpi },
+            zoom: 1 - e.deltaY / 100,
+          })
+        )
       } else {
-        const { scale, pos } = onTwoFingerMove(canvas, {
-          x: -e.deltaX,
-          y: -e.deltaY,
-        })
-
-        ctx.setTransform(scale, 0, 0, scale, pos.x, pos.y)
+        dispatch(move({ x: -e.deltaX, y: -e.deltaY }))
       }
-
-      onUpdate()
     })
   }
-
-  window.addEventListener('resize', () => {
-    onTwoFingerMove(canvas, { x: 0, y: 0 })
-    onUpdate()
-  })
 }

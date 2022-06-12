@@ -1,4 +1,3 @@
-import { move, restore, zoom } from './pinch.js'
 import events from './events.js'
 
 const canvas = document.getElementById('canvas')
@@ -20,7 +19,12 @@ window.addEventListener('resize', () => {
 const apple = document.getElementById('apple')
 const eye = document.getElementById('eye')
 
-const lines = [...Array(1000).keys()]
+const clear = () => {
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.restore()
+}
 
 const print = () => {
   ctx.drawImage(
@@ -35,8 +39,7 @@ const print = () => {
   )
 
   ctx.font = '18px sans-serif'
-
-  lines.forEach(y => {
+  ;[...Array(1000).keys()].forEach(y => {
     ctx.beginPath()
     ctx.rect(canvas.width / 2, y * 20 - 2, 40, 2)
     ctx.fillText(y, canvas.width / 2 - 40, y * 20 + 5)
@@ -44,33 +47,12 @@ const print = () => {
   })
 }
 
-events(canvas, {
-  bounding: {
-    x: 1000,
-    y: 1000,
-  },
-  onTwoFingerMove: move,
-  onTwoFingerPinch: zoom,
-  onUpdate: print,
+events(canvas)
+
+canvas.addEventListener('pan', ({ detail: { scale, position } }) => {
+  clear()
+  ctx.setTransform(scale, 0, 0, scale, position.x, position.y)
+  print()
 })
 
 print()
-
-document.querySelector('.button-1')?.addEventListener('click', () => {
-  const z = zoom(canvas, { zoom: 0.3 })
-  print()
-
-  console.log(z)
-})
-
-document.querySelector('.button-3')?.addEventListener('click', () => {
-  const z = zoom(canvas, { zoom: -0.3 })
-  print()
-
-  console.log(z)
-})
-
-document.querySelector('.button-2')?.addEventListener('click', () => {
-  restore(canvas)
-  print()
-})
