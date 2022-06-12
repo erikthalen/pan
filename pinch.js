@@ -7,74 +7,49 @@ const clear = ctx => {
   ctx.restore()
 }
 
+let scale = 1
+const pos = { x: 0, y: 0 }
+
 const _base =
   doWhatYouGottaDo =>
   (canvas, ...args) => {
     const ctx = canvas.getContext('2d')
     clear(ctx)
 
-    const { a } = ctx.getTransform()
-
-    const focal = (args.length && args[0]?.focal) || {
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-    }
-
-    // begin
-    ctx.transform(1, 0, 0, 1, focal.x * a, focal.y * a)
-
     const res = doWhatYouGottaDo(ctx, ...args)
-
-    ctx.transform(1, 0, 0, 1, -focal.x * a, -focal.y * a)
 
     return res
   }
 
-export const move = _base((ctx, { x, y, bounding }) => {
-  const { a, d, e, f } = ctx.getTransform()
-  const n = {
-    x: x / a,
-    y: y / d,
+export const move = _base(
+  (ctx, { x, y, bounding = { x: Infinity, y: Infinity } }) => {
+    pos.x = pos.x + x
+    pos.y = pos.y + y
+
+    return { scale, pos }
   }
+)
 
-  console.log(e, f)
+export const zoom = _base(
+  (ctx, { focal, zoom, factor = 1, max = 10, min = 0.05 }) => {
+    const atMax = scale === max || scale === min
 
-  // if (bounding) {
-  //   if (e + n.x < bounding.x && e + n.x > -bounding.x) {
-  //     ctx.translate(n.x, 0)
-  //   }
-  //   if (f + n.y < bounding.y && f + n.y > -bounding.y) {
-  //     ctx.translate(0, n.y)
-  //   }
-  // } else {
-  //   ctx.translate(n.x, n.y)
-  // }
+    const at = {
+      x: atMax ? pos.x : focal.x,
+      y: atMax ? pos.y : focal.y,
+    }
 
-  ctx.translate(n.x, n.y)
+    scale = clamp(scale * zoom, min, max)
 
-  return n
-})
+    pos.x = at.x - (at.x - pos.x) * zoom
+    pos.y = at.y - (at.y - pos.y) * zoom
 
-let ax = 1
-
-export const zoom = _base((ctx, { zoom, scale = 1, max = 200, min = 0.1 }) => {
-  if (isNaN(zoom)) return
-
-  const { a, b, c, d, e, f } = ctx.getTransform()
-
-  const n = ax + (zoom / scale) * (ax / 2)
-
-  ax = clamp(Math.round(n * 100) / 100, min, max)
-
-  ctx.setTransform(1, b, c, 1, e, f)
-  ctx.scale(ax, ax)
-
-  return ax
-})
+    return { pos, scale }
+  }
+)
 
 export const restore = canvas => {
   const ctx = canvas.getContext('2d')
   clear(ctx)
   ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ax = 1
 }

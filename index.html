@@ -1,81 +1,44 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <title>pan</title>
+    <script type="module" src="/main.js"></script>
 
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>Zooming via HTML5 Canvas Context</title>
-  <style type="text/css" media="screen">
-    body {
-      text-align: center;
-      margin: 0;
-    }
+    <style>
+      /* * {
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+      } */
 
-    canvas {
-      display: block;
-    }
-  </style>
-</head>
-
-<body>
-  <canvas></canvas>
-
-  <script type="text/javascript" charset="utf-8">
-    var canvas = document.querySelector('canvas')
-
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    var gkhead = new Image;
-
-    window.onload = function () {
-      var ctx = canvas.getContext('2d');
-
-      function print() {
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
-
-        ctx.scale(0.1, 0.1)
-        ctx.drawImage(gkhead, 11000, 3000);
-
-      }
-      print();
-
-      var scale = 1;
-      const pos = { x: 0, y: 0 }
-
-      const pan = (amount) => {
-        pos.x += amount.x;
-        pos.y += amount.y;
-        
-        ctx.setTransform(scale, 0, 0, scale, pos.x, pos.y)
-      }
-      
-      const scaleAt = (at, amount) => {
-        scale *= amount;
-        pos.x = at.x - (at.x - pos.x) * amount;
-        pos.y = at.y - (at.y - pos.y) * amount;
-        
-        ctx.setTransform(scale, 0, 0, scale, pos.x, pos.y)
+      body {
+        margin: 0;
       }
 
-      var handleScroll = function (e) {
-        e.preventDefault()
-
-        if (!e.ctrlKey) {
-          pan({ x: -e.deltaX, y: -e.deltaY })
-        } else {
-          scaleAt({ x: e.offsetX, y: e.offsetY }, 1 - e.deltaY / 100)
-        }
-
-        print()
+      img {
+        display: none;
       }
-      canvas.addEventListener('wheel', handleScroll, false);
-    };
 
-    gkhead.src = './eye-2.jpg';
-  </script>
-</body>
+      canvas {
+        width: 100vw;
+        height: 100vh;
 
+        max-width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <button class="button-1">Zoom in</button>
+    <button class="button-3">Zoom out</button>
+    <button class="button-2">Restore</button>
+
+    <img id="apple" src="./apple.png" alt="apple" />
+    <img id="eye" src="./eye.jpg" alt="eye" />
+  </body>
 </html>
